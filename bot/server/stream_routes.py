@@ -381,7 +381,7 @@ async def lazydeveloper_handler(request: web.Request):
         else:
             id = int(re.search(r"(\d+)(?:\/\S+)?", path).group(1))
             secure_hash = request.rel_url.query.get("hash")
-        return web.Response(text=await render_lazy_page(id, secure_hash, route='lazydeveloper'), content_type='text/html')
+        return web.Response(text=await render_lazy_page(id, secure_hash), content_type='text/html')
     except InvalidHash as LazyDeveloper:
         raise web.HTTPForbidden(text=LazyDeveloper.message)
     except FIleNotFound as LazyDeveloper:
