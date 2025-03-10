@@ -115,7 +115,7 @@ async def lazymsg(client: Client, message: Message):
             ]
             )
 
-        await txtLazyDeveloper.edit(f"<b>📂 ᴛᴇʟᴇɢʀᴀᴍ ғɪʟᴇ:</b>", reply_markup=reply_markup, disable_web_page_preview = True)
+        await txtLazyDeveloper.edit(f"<b>📂 Click Below to convert Fast download / Online Stream link 🚀 </b>", reply_markup=reply_markup, disable_web_page_preview = True)
     except Exception as LazyDeveloper:
         LOGGER.info(LazyDeveloper)
 
@@ -135,11 +135,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     file_id=file_id,
                 )
 
-                fileName = {quote_plus(get_name(lazy_msg))}
                 lazy_stream = f"{Telegram.LAZY_DOMAIN_NAME}play/{str(lazy_msg.id)}/{quote_plus(get_name(lazy_msg))}?hash={get_hash(lazy_msg)}"
                 lazy_download = f"{Telegram.LAZY_DOMAIN_NAME}lazy/{str(lazy_msg.id)}/{quote_plus(get_name(lazy_msg))}?hash={get_hash(lazy_msg)}"
 
-                
+                print(lazy_stream)
+                print(lazy_download)
                 await sleep(1)
                 await xo.delete()
 
@@ -162,6 +162,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                         ])  # web stream Link
                 )
             except Exception as LazyDeveloper:
+                print(LazyDeveloper)
                 await query.answer(f"☣something went wrong sweetheart\n\n{LazyDeveloper}", show_alert=True)
                 return 
     
