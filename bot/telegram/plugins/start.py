@@ -135,11 +135,11 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     file_id=file_id,
                 )
 
-                lazy_stream = f"{Telegram.LAZY_DOMAIN_NAME}play/{str(lazy_msg.id)}/{quote_plus(get_name(lazy_msg))}?hash={get_hash(lazy_msg)}"
-                lazy_download = f"{Telegram.LAZY_DOMAIN_NAME}lazy/{str(lazy_msg.id)}/{quote_plus(get_name(lazy_msg))}?hash={get_hash(lazy_msg)}"
+                # lazy_stream = f"{Telegram.LAZY_DOMAIN_NAME}watch/{str(lazy_msg.id)}/{quote_plus(get_name(lazy_msg))}?hash={get_hash(lazy_msg)}"
+                lazy_stream = f"{Telegram.LAZY_DOMAIN_NAME}watch/{int(1820894005)}?id={(str(lazy_msg.id))}&hash={get_hash(lazy_msg)}"
+                lazy_download = f"{Telegram.LAZY_DOMAIN_NAME}/{str(lazy_msg.id)}/{quote_plus(get_name(lazy_msg))}?hash={get_hash(lazy_msg)}"
 
-                print(lazy_stream)
-                print(lazy_download)
+                
                 await sleep(1)
                 await xo.delete()
 

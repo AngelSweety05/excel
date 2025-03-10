@@ -59,7 +59,6 @@ async def get_files(chat_id, page=1):
 async def posts_file(posts, chat_id):
     phtml = """
             <div class="col">
-                
                     <div class="card text-white bg-primary mb-3">
                         <input type="checkbox" class="admin-only form-check-input position-absolute top-0 end-0 m-2"
                             onchange="checkSendButton()" id="selectCheckbox"

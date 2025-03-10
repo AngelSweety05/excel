@@ -324,190 +324,105 @@ async def get_thumbnail(request):
     return response
 
 
-# @routes.get('/watch/{chat_id}', allow_head=True)
-# async def stream_handler_watch(request: web.Request):
-#     session = await get_session(request)
-#     if username := session.get('user'):
-#         try:
-#             chat_id = request.match_info['chat_id']
-#             chat_id = f"-100{chat_id}"
-#             message_id = request.query.get('id')
-#             secure_hash = request.query.get('hash')
-#             return web.Response(text=await render_page(message_id, secure_hash, chat_id=chat_id), content_type='text/html')
-#         except InvalidHash as e:
-#             raise web.HTTPForbidden(text=e.message) from e
-#         except FIleNotFound as e:
-#             db.delete_file(chat_id=chat_id, msg_id=message_id, hash=secure_hash)
-#             raise web.HTTPNotFound(text=e.message) from e
-#         except (AttributeError, BadStatusLine, ConnectionResetError):
-#             pass
-#         except Exception as e:
-#             logging.critical(e.with_traceback(None))
-#             raise web.HTTPInternalServerError(text=str(e)) from e
-#     else:
-#         session['redirect_url'] = request.path_qs
-#         return web.HTTPFound('/login')
+@routes.get('/watch/{chat_id}', allow_head=True)
+async def stream_handler_watch(request: web.Request):
+    session = await get_session(request)
+    if username := session.get('user'):
+        try:
+            chat_id = request.match_info['chat_id']
+            chat_id = f"-100{chat_id}"
+            message_id = request.query.get('id')
+            secure_hash = request.query.get('hash')
+            return web.Response(text=await render_page(message_id, secure_hash, chat_id=chat_id), content_type='text/html')
+        except InvalidHash as e:
+            raise web.HTTPForbidden(text=e.message) from e
+        except FIleNotFound as e:
+            db.delete_file(chat_id=chat_id, msg_id=message_id, hash=secure_hash)
+            raise web.HTTPNotFound(text=e.message) from e
+        except (AttributeError, BadStatusLine, ConnectionResetError):
+            pass
+        except Exception as e:
+            logging.critical(e.with_traceback(None))
+            raise web.HTTPInternalServerError(text=str(e)) from e
+    else:
+        session['redirect_url'] = request.path_qs
+        return web.HTTPFound('/login')
 
 
-# @routes.get('/{chat_id}/{encoded_name}', allow_head=True)
-# async def stream_handler(request: web.Request):
+@routes.get('/{chat_id}/{encoded_name}', allow_head=True)
+async def stream_handler(request: web.Request):
+    try:
+        chat_id = request.match_info['chat_id']
+        chat_id = f"-100{chat_id}"
+        message_id = request.query.get('id')
+        #name = request.match_info['encoded_name']
+        secure_hash = request.query.get('hash')
+        return await media_streamer(request, int(chat_id), int(message_id), secure_hash)
+    except InvalidHash as e:
+        raise web.HTTPForbidden(text=e.message) from e
+    except FIleNotFound as e:
+        db.delete_file(chat_id=chat_id, msg_id=message_id, hash=secure_hash)
+        raise web.HTTPNotFound(text=e.message) from e
+    except (AttributeError, BadStatusLine, ConnectionResetError):
+        pass
+    except Exception as e:
+        logging.critical(e.with_traceback(None))
+        raise web.HTTPInternalServerError(text=str(e))
+
+
+# @routes.get(r"/play/{path:\S+}", allow_head=True)
+# async def lazydeveloper_handler(request: web.Request):
 #     try:
-#         chat_id = request.match_info['chat_id']
-#         chat_id = f"-100{chat_id}"
-#         message_id = request.query.get('id')
-#         #name = request.match_info['encoded_name']
-#         secure_hash = request.query.get('hash')
-#         return await media_streamer(request, int(chat_id), int(message_id), secure_hash)
-#     except InvalidHash as e:
-#         raise web.HTTPForbidden(text=e.message) from e
-#     except FIleNotFound as e:
-#         db.delete_file(chat_id=chat_id, msg_id=message_id, hash=secure_hash)
-#         raise web.HTTPNotFound(text=e.message) from e
+#         path = request.match_info["path"]
+#         match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
+#         if match:
+#             secure_hash = match.group(1)
+#             id = int(match.group(2))
+#         else:
+#             id = int(re.search(r"(\d+)(?:\/\S+)?", path).group(1))
+#             secure_hash = request.rel_url.query.get("hash")
+#         return web.Response(text=await render_lazy_page(id, secure_hash), content_type='text/html')
+#     except InvalidHash as LazyDeveloper:
+#         raise web.HTTPForbidden(text=LazyDeveloper.message)
+#     except FIleNotFound as LazyDeveloper:
+#         raise web.HTTPNotFound(text=LazyDeveloper.message)
 #     except (AttributeError, BadStatusLine, ConnectionResetError):
 #         pass
-#     except Exception as e:
-#         logging.critical(e.with_traceback(None))
-#         raise web.HTTPInternalServerError(text=str(e))
+#     except Exception as LazyDeveloper:
+#         logging.critical(LazyDeveloper.with_traceback(None))
+#         raise web.HTTPInternalServerError(text=str(LazyDeveloper))
 
-
-@routes.get(r"/play/{path:\S+}", allow_head=True)
-async def lazydeveloper_handler(request: web.Request):
-    try:
-        path = request.match_info["path"]
-        match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
-        if match:
-            secure_hash = match.group(1)
-            id = int(match.group(2))
-        else:
-            id = int(re.search(r"(\d+)(?:\/\S+)?", path).group(1))
-            secure_hash = request.rel_url.query.get("hash")
-        return web.Response(text=await render_lazy_page(id, secure_hash), content_type='text/html')
-    except InvalidHash as LazyDeveloper:
-        raise web.HTTPForbidden(text=LazyDeveloper.message)
-    except FIleNotFound as LazyDeveloper:
-        raise web.HTTPNotFound(text=LazyDeveloper.message)
-    except (AttributeError, BadStatusLine, ConnectionResetError):
-        pass
-    except Exception as LazyDeveloper:
-        logging.critical(LazyDeveloper.with_traceback(None))
-        raise web.HTTPInternalServerError(text=str(LazyDeveloper))
-
-@routes.get(r"/{path:\S+}", allow_head=True)
-async def lazydeveloper_handler(request: web.Request):
-    try:
-        path = request.match_info["path"]
-        match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
-        if match:
-            secure_hash = match.group(1)
-            id = int(match.group(2))
-        else:
-            id = int(re.search(r"(\d+)(?:\/\S+)?", path).group(1))
-            secure_hash = request.rel_url.query.get("hash")
-        return await lazydeveloper_streamer(request, id, secure_hash)
-    except InvalidHash as LazyDeveloper:
-        raise web.HTTPForbidden(text=LazyDeveloper.message)
-    except FIleNotFound as LazyDeveloper:
-        raise web.HTTPNotFound(text=LazyDeveloper.message)
-    except (AttributeError, BadStatusLine, ConnectionResetError):
-        pass
-    except Exception as LazyDeveloper:
-        logging.critical(LazyDeveloper.with_traceback(None))
-        raise web.HTTPInternalServerError(text=str(LazyDeveloper))
+# @routes.get(r"/{path:\S+}", allow_head=True)
+# async def lazydeveloper_handler(request: web.Request):
+#     try:
+#         path = request.match_info["path"]
+#         match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
+#         if match:
+#             secure_hash = match.group(1)
+#             id = int(match.group(2))
+#         else:
+#             id = int(re.search(r"(\d+)(?:\/\S+)?", path).group(1))
+#             secure_hash = request.rel_url.query.get("hash")
+#         return await lazydeveloper_streamer(request, id, secure_hash)
+#     except InvalidHash as LazyDeveloper:
+#         raise web.HTTPForbidden(text=LazyDeveloper.message)
+#     except FIleNotFound as LazyDeveloper:
+#         raise web.HTTPNotFound(text=LazyDeveloper.message)
+#     except (AttributeError, BadStatusLine, ConnectionResetError):
+#         pass
+#     except Exception as LazyDeveloper:
+#         logging.critical(LazyDeveloper.with_traceback(None))
+#         raise web.HTTPInternalServerError(text=str(LazyDeveloper))
 
 
 class_cache = {}
 
-# async def media_streamer(request: web.Request, chat_id: int, id: int, secure_hash: str):
-#     range_header = request.headers.get("Range", 0)
-
-#     index = min(work_loads, key=work_loads.get)
-#     faster_client = multi_clients[index]
-
-#     if Telegram.MULTI_CLIENT:
-#         logging.info(f"Client {index} is now serving {request.remote}")
-
-#     if faster_client in class_cache:
-#         tg_connect = class_cache[faster_client]
-#         logging.debug(f"Using cached ByteStreamer object for client {index}")
-#     else:
-#         logging.debug(f"Creating new ByteStreamer object for client {index}")
-#         tg_connect = ByteStreamer(faster_client)
-#         class_cache[faster_client] = tg_connect
-#     logging.debug("before calling get_file_properties")
-#     file_id = await tg_connect.get_file_properties(chat_id=chat_id, message_id=id)
-#     logging.debug("after calling get_file_properties")
-
-#     if file_id.unique_id[:6] != secure_hash:
-#         logging.debug(f"Invalid hash for message with ID {id}")
-#         raise InvalidHash
-
-#     file_size = file_id.file_size
-
-#     if range_header:
-#         from_bytes, until_bytes = range_header.replace("bytes=", "").split("-")
-#         from_bytes = int(from_bytes)
-#         until_bytes = int(until_bytes) if until_bytes else file_size - 1
-#     else:
-#         from_bytes = request.http_range.start or 0
-#         until_bytes = (request.http_range.stop or file_size) - 1
-
-#     if (until_bytes > file_size) or (from_bytes < 0) or (until_bytes < from_bytes):
-#         return web.Response(
-#             status=416,
-#             body="416: Range not satisfiable",
-#             headers={"Content-Range": f"bytes */{file_size}"},
-#         )
-
-#     chunk_size = 1024 * 1024
-#     until_bytes = min(until_bytes, file_size - 1)
-
-#     offset = from_bytes - (from_bytes % chunk_size)
-#     first_part_cut = from_bytes - offset
-#     last_part_cut = until_bytes % chunk_size + 1
-
-#     req_length = until_bytes - from_bytes + 1
-#     part_count = math.ceil(until_bytes / chunk_size) - \
-#         math.floor(offset / chunk_size)
-#     body = tg_connect.yield_file(
-#         file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size
-#     )
-
-#     mime_type = file_id.mime_type
-#     file_name = file_id.file_name
-#     disposition = "attachment"
-
-#     if mime_type:
-#         if not file_name:
-#             try:
-#                 file_name = f"{secrets.token_hex(2)}.{mime_type.split('/')[1]}"
-#             except (IndexError, AttributeError):
-#                 file_name = f"{secrets.token_hex(2)}.unknown"
-#     else:
-#         if file_name:
-#             mime_type = mimetypes.guess_type(file_id.file_name)
-#         else:
-#             mime_type = "application/octet-stream"
-#             file_name = f"{secrets.token_hex(2)}.unknown"
-
-#     return web.Response(
-#         status=206 if range_header else 200,
-#         body=body,
-#         headers={
-#             "Content-Type": f"{mime_type}",
-#             "Content-Range": f"bytes {from_bytes}-{until_bytes}/{file_size}",
-#             "Content-Length": str(req_length),
-#             "Content-Disposition": f'{disposition}; filename="{file_name}"',
-#             "Accept-Ranges": "bytes",
-#         },
-#     )
-
-
-async def lazydeveloper_streamer(request: web.Request, id: int, secure_hash: str):
+async def media_streamer(request: web.Request, chat_id: int, id: int, secure_hash: str):
     range_header = request.headers.get("Range", 0)
-    
+
     index = min(work_loads, key=work_loads.get)
     faster_client = multi_clients[index]
-    
+
     if Telegram.MULTI_CLIENT:
         logging.info(f"Client {index} is now serving {request.remote}")
 
@@ -519,13 +434,13 @@ async def lazydeveloper_streamer(request: web.Request, id: int, secure_hash: str
         tg_connect = ByteStreamer(faster_client)
         class_cache[faster_client] = tg_connect
     logging.debug("before calling get_file_properties")
-    file_id = await tg_connect.get_file_properties(id)
+    file_id = await tg_connect.get_file_properties(chat_id=chat_id, message_id=id)
     logging.debug("after calling get_file_properties")
-    
+
     if file_id.unique_id[:6] != secure_hash:
         logging.debug(f"Invalid hash for message with ID {id}")
         raise InvalidHash
-    
+
     file_size = file_id.file_size
 
     if range_header:
@@ -551,7 +466,8 @@ async def lazydeveloper_streamer(request: web.Request, id: int, secure_hash: str
     last_part_cut = until_bytes % chunk_size + 1
 
     req_length = until_bytes - from_bytes + 1
-    part_count = math.ceil(until_bytes / chunk_size) - math.floor(offset / chunk_size)
+    part_count = math.ceil(until_bytes / chunk_size) - \
+        math.floor(offset / chunk_size)
     body = tg_connect.yield_file(
         file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size
     )
@@ -584,3 +500,87 @@ async def lazydeveloper_streamer(request: web.Request, id: int, secure_hash: str
             "Accept-Ranges": "bytes",
         },
     )
+
+
+# async def lazydeveloper_streamer(request: web.Request, id: int, secure_hash: str):
+#     range_header = request.headers.get("Range", 0)
+    
+#     index = min(work_loads, key=work_loads.get)
+#     faster_client = multi_clients[index]
+    
+#     if Telegram.MULTI_CLIENT:
+#         logging.info(f"Client {index} is now serving {request.remote}")
+
+#     if faster_client in class_cache:
+#         tg_connect = class_cache[faster_client]
+#         logging.debug(f"Using cached ByteStreamer object for client {index}")
+#     else:
+#         logging.debug(f"Creating new ByteStreamer object for client {index}")
+#         tg_connect = ByteStreamer(faster_client)
+#         class_cache[faster_client] = tg_connect
+#     logging.debug("before calling get_file_properties")
+#     file_id = await tg_connect.get_file_properties(id)
+#     logging.debug("after calling get_file_properties")
+    
+#     if file_id.unique_id[:6] != secure_hash:
+#         logging.debug(f"Invalid hash for message with ID {id}")
+#         raise InvalidHash
+    
+#     file_size = file_id.file_size
+
+#     if range_header:
+#         from_bytes, until_bytes = range_header.replace("bytes=", "").split("-")
+#         from_bytes = int(from_bytes)
+#         until_bytes = int(until_bytes) if until_bytes else file_size - 1
+#     else:
+#         from_bytes = request.http_range.start or 0
+#         until_bytes = (request.http_range.stop or file_size) - 1
+
+#     if (until_bytes > file_size) or (from_bytes < 0) or (until_bytes < from_bytes):
+#         return web.Response(
+#             status=416,
+#             body="416: Range not satisfiable",
+#             headers={"Content-Range": f"bytes */{file_size}"},
+#         )
+
+#     chunk_size = 1024 * 1024
+#     until_bytes = min(until_bytes, file_size - 1)
+
+#     offset = from_bytes - (from_bytes % chunk_size)
+#     first_part_cut = from_bytes - offset
+#     last_part_cut = until_bytes % chunk_size + 1
+
+#     req_length = until_bytes - from_bytes + 1
+#     part_count = math.ceil(until_bytes / chunk_size) - math.floor(offset / chunk_size)
+#     body = tg_connect.yield_file(
+#         file_id, index, offset, first_part_cut, last_part_cut, part_count, chunk_size
+#     )
+
+#     mime_type = file_id.mime_type
+#     file_name = file_id.file_name
+#     disposition = "attachment"
+
+#     if mime_type:
+#         if not file_name:
+#             try:
+#                 file_name = f"{secrets.token_hex(2)}.{mime_type.split('/')[1]}"
+#             except (IndexError, AttributeError):
+#                 file_name = f"{secrets.token_hex(2)}.unknown"
+#     else:
+#         if file_name:
+#             mime_type = mimetypes.guess_type(file_id.file_name)
+#         else:
+#             mime_type = "application/octet-stream"
+#             file_name = f"{secrets.token_hex(2)}.unknown"
+
+#     return web.Response(
+#         status=206 if range_header else 200,
+#         body=body,
+#         headers={
+#             "Content-Type": f"{mime_type}",
+#             "Content-Range": f"bytes {from_bytes}-{until_bytes}/{file_size}",
+#             "Content-Length": str(req_length),
+#             "Content-Disposition": f'{disposition}; filename="{file_name}"',
+#             "Accept-Ranges": "bytes",
+#         },
+#     )

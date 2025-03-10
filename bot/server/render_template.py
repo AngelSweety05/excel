@@ -86,17 +86,17 @@ async def render_lazy_page(id, secure_hash):
         raise InvalidHash
     src = urllib.parse.urljoin(Telegram.LAZY_DOMAIN_NAME, f'{secure_hash}{str(id)}')
     if str(file_data.mime_type.split('/')[0].strip()) == 'video':
-        async with aiofiles.open('bot/server/template/lazystream.html') as r:
+        async with aiopen('bot/server/template/lazystream.html') as r:
             heading = 'Watch {}'.format(file_data.file_name)
             tag = file_data.mime_type.split('/')[0].strip()
             html = (await r.read()).replace('tag', tag) % (heading, file_data.file_name, src)
     elif str(file_data.mime_type.split('/')[0].strip()) == 'audio':
-        async with aiofiles.open('bot/server/template/lazystream.html') as r:
+        async with aiopen('bot/server/template/lazystream.html') as r:
             heading = 'Listen {}'.format(file_data.file_name)
             tag = file_data.mime_type.split('/')[0].strip()
             html = (await r.read()).replace('tag', tag) % (heading, file_data.file_name, src)
     else:
-        async with aiofiles.open('bot/server/template/dl.html') as r:
+        async with aiopen('bot/server/template/dl.html') as r:
             async with aiohttp.ClientSession() as s:
                 async with s.get(src) as u:
                     heading = 'Download {}'.format(file_data.file_name)
