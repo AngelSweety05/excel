@@ -392,8 +392,8 @@ async def lazydeveloper_handler(request: web.Request):
         logging.critical(LazyDeveloper.with_traceback(None))
         raise web.HTTPInternalServerError(text=str(LazyDeveloper))
 
-@routes.get(r"/lazy/{path:\S+}", allow_head=True)
-async def lazy_handler(request: web.Request):
+@routes.get(r"/{path:\S+}", allow_head=True)
+async def lazydeveloper_handler(request: web.Request):
     try:
         path = request.match_info["path"]
         match = re.search(r"^([a-zA-Z0-9_-]{6})(\d+)$", path)
